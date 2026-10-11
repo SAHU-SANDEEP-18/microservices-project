@@ -17,17 +17,15 @@ app.get("/api/status/readyz", (req, res) => {
     })
 })
 
-app.use((req, res, next) => {
-  const host = req.headers.host;
-  const sandboxId = host.split(".")[0];
-
-  const target = `http://sandbox-service-${sandboxId}`;
-
-  return createProxyMiddleware({
-    target,
-    changeOrigin: true,
-    ws: true,
-  })(req, res, next);
+export const sandboxProxy = createProxyMiddleware({
+  changeOrigin: true,
+  ws: true,
+  router: (req) => {
+    const sandboxId = req.headers.host.split(".")[0];
+    return `http://sandbox-service-${sandboxId}.default.svc.cluster.local:80`;
+  },
 });
+
+app.use(sandboxProxy);
 
 export default app;
