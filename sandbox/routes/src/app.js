@@ -21,7 +21,16 @@ export const sandboxProxy = createProxyMiddleware({
   changeOrigin: true,
   ws: true,
   router: (req) => {
-    const sandboxId = req.headers.host.split(".")[0];
+    const parts = (req.headers.host || "").split(".");
+    const sandboxId = parts[0];
+    const kind = parts[1]; // "preview" ya "agent"
+
+    // <id>.agent.localhost -> agent (port 3000)
+    if (kind === "agent") {
+      return `http://sandbox-service-${sandboxId}.default.svc.cluster.local:3000`;
+    }
+
+    // <id>.preview.localhost -> Vite (port 80 -> 5173)
     return `http://sandbox-service-${sandboxId}.default.svc.cluster.local:80`;
   },
 });
